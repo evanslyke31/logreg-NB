@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
+#include <cmath>
 
 using namespace std;
 
@@ -48,16 +49,18 @@ int main() {
 	}
 
 	vector<bool> survivedTrain, survivedTest;
-	vector<int> pclassTrain, pclassTest, sexTrain, sexTest;
+	vector<int> pclassTrain, pclassTest, sexTrain, sexTest, ageTrain, ageTest;
 	for (int i = 0; i < 900; i++) {
 		survivedTrain.push_back(survived[i]);
 		pclassTrain.push_back(pclass[i]);
 		sexTrain.push_back(sex[i]);
+		ageTrain.push_back(age[i]);
 	}
 	for (int i = 900; i < data_count; i++) {
 		survivedTest.push_back(survived[i]);
 		pclassTest.push_back(pclass[i]);
 		sexTest.push_back(sex[i]);
+		ageTest.push_back(age[i]);
 	}
 
 /////////////////////////////////////////////// ALGORITHM //////////////////////////////////////////////////////
@@ -105,9 +108,35 @@ int main() {
 					lh_sex[i][j]++;
 			}
 			lh_sex[i][j] /= count_survived[i];
-			cout << lh_sex[i][j] << endl;
+			//cout << lh_sex[i][j] << endl;
 		}
 	}
+
+	double age_mean[2] = {0,0};
+	double age_var[2] = {0,0};
+	for(int i = 0; i < 2; i++) {
+		int c = 0;
+		for(int j = 0; j < ageTrain.size(); j++) {
+			if(survivedTrain[j] == i) {
+				age_mean[i] += ageTrain[j];
+				c++;
+			}
+		}
+		age_mean[i] /= c++;
+		c = 0;
+		for(int j = 0; j < ageTrain.size(); j++) {
+			if(survivedTrain[j] == i) {
+				age_var[i] += pow(ageTrain[j] - age_mean[i], 2);
+				c++;
+			}
+			
+		}
+		age_var[i] /= c;
+		//cout << age_mean[i] << endl;
+		//cout << age_var[i] << endl;
+	}
+
+	
 
 
 
