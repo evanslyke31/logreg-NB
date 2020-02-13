@@ -192,8 +192,8 @@ int main() {
 	cout << "Specificity: " << (double)(tn) / (tn + fp) << endl;
 
 	auto stop = high_resolution_clock::now();//TIMER STOP!!!
-	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << "\nTime elapsed: " << duration.count() << " milliseconds" << endl;
+	auto duration = duration_cast<microseconds>(stop - start);
+	cout << "\nTime elapsed: " << duration.count() << " microseconds" << endl;
 
 	return 0;
 
