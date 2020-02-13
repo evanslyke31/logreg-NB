@@ -7,6 +7,10 @@
 
 using namespace std;
 
+double calc_age_lh(int v, double mean, double var) {
+	return (1 / (sqrt(M_PI * 2 * var)) * exp(-pow(v - mean,2)/(2 * var)));
+}
+
 int main() {
 
 ///////////////////////////////////////////////// READ FILE ////////////////////////////////////////////////////
@@ -77,6 +81,7 @@ int main() {
 	//cout << apriori[0] << endl;
 	//cout << apriori[1] << endl;
 
+	//get survived counts for no and yes
 	int count_survived[2] = {0,0};
 	count_survived[0] = count_survived[1] = 0;
 	for (int i = 0; i < survivedTrain.size(); i++)
@@ -88,6 +93,7 @@ int main() {
 	//cout << count_survived[0] << endl;
 	//cout << count_survived[1] << endl;
 
+	//liklihood for pclass
 	double lh_pclass[2][3] = { {0,0,0},{0,0,0} };
 	for (int i = 0; i < 2; i++) {
 		for (int j = 0; j < 3; j++) {
@@ -100,6 +106,7 @@ int main() {
 		}
 	}
 
+	//Likelihood for sex (not much)
 	double lh_sex[2][2] = { {0,0},{0,0} };
 	for (int i = 0; i < 2; i++) {
 		for (int j = 0; j < 2; j++) {
@@ -112,6 +119,7 @@ int main() {
 		}
 	}
 
+	//Liklihood for continuous data (age)
 	double age_mean[2] = {0,0};
 	double age_var[2] = {0,0};
 	for(int i = 0; i < 2; i++) {
@@ -122,7 +130,7 @@ int main() {
 				c++;
 			}
 		}
-		age_mean[i] /= c++;
+		age_mean[i] /= c;
 		c = 0;
 		for(int j = 0; j < ageTrain.size(); j++) {
 			if(survivedTrain[j] == i) {
@@ -136,10 +144,18 @@ int main() {
 		//cout << age_var[i] << endl;
 	}
 
-	
-
-
-
+	for(int i = 0; i < 10; i++) {
+		int sexV = sexTest[i];
+		int pclassV = pclassTest[i];
+		int ageV = ageTest[i];
+		double num_s = lh_pclass[1][pclassV - 1] * lh_sex[1][sexV] * apriori[1]
+				* calc_age_lh(ageV, age_mean[1], age_var[1]);
+		double num_p = lh_pclass[0][pclassV - 1] * lh_sex[0][sexV] * apriori[0]
+				* calc_age_lh(ageV, age_mean[0], age_var[0]);
+		double denominator = num_s + num_p; 
+		cout << " " << (num_p/denominator) << (num_s/denominator) <<  endl;
+		//cout << sexV << " " << pclassV << " " << ageV << " " << endl;
+	}
 	return 0;
 
 }
