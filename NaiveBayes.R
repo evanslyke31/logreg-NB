@@ -1,4 +1,4 @@
-df <- read.csv("titanic_project.csv", header = TRUE)
+df <- titanic
 
 df$pclass <- factor(df$pclass)
 df$survived <- factor(df$survived)
@@ -20,14 +20,11 @@ p1 <- predict(nb1, newdata=test)
 table(p1, test$survived)
 
 acc1 <- mean(p1 == test$survived)                     # calculates the accuracy
-print(paste("nb1 accuracy: ", acc1 * 100, "%"))
+print(paste("nb1 accuracy: ", acc1))
 sens <- sensitivity(table(p1, test$survived)) # calculate sensitivity
 print(paste("sensitivity: ",sens))
 spec <- specificity(table(p1, test$survived)) #calculate specificity
 print(paste("specificity: ", spec))
 stop <- proc.time()
-stop-start[3]
-
-write.csv(train, file = "NB_train.csv", row.names = FALSE)      
-write.csv(test, file = "NB_test.csv", row.names = FALSE)         
+(stop-start)[3]
 

@@ -4,16 +4,18 @@
 #include <string>
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 
 double calc_age_lh(int v, double mean, double var) {
-	return (1 / (sqrt(M_PI * 2 * var)) * exp(-pow(v - mean,2)/(2 * var)));
+	return (1 / (sqrt(3.14159265359 * 2 * var)) * exp(-pow(v - mean, 2) / (2 * var)));
 }
 
 int main() {
 
-///////////////////////////////////////////////// READ FILE ////////////////////////////////////////////////////
+	///////////////////////////////////////////////// READ FILE ////////////////////////////////////////////////////
 
 	ifstream ip("titanic_project.csv");
 
@@ -67,9 +69,11 @@ int main() {
 		ageTest.push_back(age[i]);
 	}
 
-/////////////////////////////////////////////// ALGORITHM //////////////////////////////////////////////////////
+	/////////////////////////////////////////////// ALGORITHM //////////////////////////////////////////////////////
 
-	double apriori[2] = {0,0};
+	auto start = high_resolution_clock::now(); //TIMER START!!
+
+	double apriori[2] = { 0,0 };
 	for (int i = 0; i < survivedTrain.size(); i++)
 		if (survivedTrain[i])
 			apriori[1]++;
@@ -82,7 +86,7 @@ int main() {
 	//cout << apriori[1] << endl;
 
 	//get survived counts for no and yes
-	int count_survived[2] = {0,0};
+	int count_survived[2] = { 0,0 };
 	count_survived[0] = count_survived[1] = 0;
 	for (int i = 0; i < survivedTrain.size(); i++)
 		if (survivedTrain[i])
@@ -120,42 +124,77 @@ int main() {
 	}
 
 	//Liklihood for continuous data (age)
-	double age_mean[2] = {0,0};
-	double age_var[2] = {0,0};
-	for(int i = 0; i < 2; i++) {
+	double age_mean[2] = { 0,0 };
+	double age_var[2] = { 0,0 };
+	for (int i = 0; i < 2; i++) {
 		int c = 0;
-		for(int j = 0; j < ageTrain.size(); j++) {
-			if(survivedTrain[j] == i) {
+		for (int j = 0; j < ageTrain.size(); j++) {
+			if (survivedTrain[j] == i) {
 				age_mean[i] += ageTrain[j];
 				c++;
 			}
 		}
 		age_mean[i] /= c;
 		c = 0;
-		for(int j = 0; j < ageTrain.size(); j++) {
-			if(survivedTrain[j] == i) {
+		for (int j = 0; j < ageTrain.size(); j++) {
+			if (survivedTrain[j] == i) {
 				age_var[i] += pow(ageTrain[j] - age_mean[i], 2);
 				c++;
 			}
-			
+
 		}
 		age_var[i] /= c;
 		//cout << age_mean[i] << endl;
 		//cout << age_var[i] << endl;
 	}
 
-	for(int i = 0; i < 10; i++) {
+	double** predict_raw = new double*[survivedTest.size()];
+	for (int i = 0; i < survivedTest.size(); i++)
+		predict_raw[i] = new double[2];
+
+	for (int i = 0; i < survivedTest.size(); i++) {
 		int sexV = sexTest[i];
 		int pclassV = pclassTest[i];
 		int ageV = ageTest[i];
 		double num_s = lh_pclass[1][pclassV - 1] * lh_sex[1][sexV] * apriori[1]
-				* calc_age_lh(ageV, age_mean[1], age_var[1]);
+			* calc_age_lh(ageV, age_mean[1], age_var[1]);
 		double num_p = lh_pclass[0][pclassV - 1] * lh_sex[0][sexV] * apriori[0]
-				* calc_age_lh(ageV, age_mean[0], age_var[0]);
-		double denominator = num_s + num_p; 
-		cout << " " << (num_p/denominator) << (num_s/denominator) <<  endl;
-		//cout << sexV << " " << pclassV << " " << ageV << " " << endl;
+			* calc_age_lh(ageV, age_mean[0], age_var[0]);
+		double denominator = num_s + num_p;
+		predict_raw[i][0] = num_p / denominator;
+		predict_raw[i][1] = num_s / denominator;
 	}
+
+	cout << "Apriori:\n Perished: " << apriori[0] << "\tSurvived: " << apriori[1] << endl << endl;
+	cout << "Test raw probabilities:\n Perished\tSurvived" << endl;
+
+	for (int i = 0; i < 6; i++)
+		cout << "  " << predict_raw[i][0] << "\t " << predict_raw[i][1] << endl;
+	
+	int tp = 0, tn = 0, fp = 0, fn = 0;
+	for (int i = 0; i < survivedTest.size(); i++) {
+		if (predict_raw[i][1] > .5 && survivedTest[i] == 1)
+			tn++;
+		else if (predict_raw[i][1] > .5 && survivedTest[i] == 0)
+			fn++;
+		else if (predict_raw[i][0] > .5 && survivedTest[i] == 0)
+			tp++;
+		else if (predict_raw[i][0] > .5 && survivedTest[i] == 1)
+			fp++;
+	}
+	
+	cout << "\nConfusion Matrix:" << endl;
+	cout << " " << tp << "\t" << fp << endl;
+	cout << " " << fn << "\t" << tn << endl;
+	
+	cout << "\nAccuracy: " << (double)(tn + tp) / (tn + tp + fp + fn) << endl;
+	cout << "Sensitivity: " << (double)(tp) / (tp + fn) << endl;
+	cout << "Specificity: " << (double)(tn) / (tn + fp) << endl;
+
+	auto stop = high_resolution_clock::now();//TIMER STOP!!!
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << "\nTime elapsed: " << duration.count() << " milliseconds" << endl;
+
 	return 0;
 
 }
