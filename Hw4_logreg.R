@@ -23,6 +23,11 @@ stop <- proc.time()
 weights
 (stop-start)[3]
 
+
+plasma_log_odds <- cbind(rep(1, 32), plasma$fibrinogen) %*% weights
+plot(plasma$fibrinogen, plasma_log_odds, col=plasma$ESR)
+abline(weights[1], weights[2])
+
 attach(plasma)
 par(mfrow=c(1,2))
 plot(ESR, fibrinogen, data=plasma, main="Fibrinogen", varwidth=TRUE)

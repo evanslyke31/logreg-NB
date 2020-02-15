@@ -13,6 +13,7 @@ train <- df[1:900,]
 test <- df[901:nrow(df),]
 
 library(e1071)
+library(caret)
 nb1 <- naiveBayes(survived~pclass+sex+age, data=train)
 nb1
 p1 <- predict(nb1, newdata=test)
